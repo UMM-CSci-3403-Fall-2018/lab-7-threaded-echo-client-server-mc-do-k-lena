@@ -7,6 +7,38 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+class KeyboardReader implements Runnable {
+    public static OutputStream socketOutput;
+    public KeyboardReader(OutputStream socketOutput) {
+        this.socketOutput = socketOutput;
+    }
+    public void run() {
+        try{
+            int readByte;
+            while ((readByte = System.in.read()) != -1) {
+                socketOutput.write(readByte);
+                socketOutput.flush();
+            }
+        } catch (IOException io) {}
+    }
+}
+
+class ServerReader implements Runnable {
+    public static InputStream socketInput;
+    public ServerReader(InputStream socketInput) {
+        this.socketInput = socketInput;
+    }
+
+    public void run()  {
+        try {
+            int socketByte;
+            while((socketByte = socketInput.read()) != -1) {
+                System.out.write(socketByte);
+            }
+        } catch (IOException io) {}
+    }
+}
+
 
 public class EchoClient {
 	private static final int portNumber = 6013;
@@ -21,42 +53,35 @@ public class EchoClient {
 		}
 
 		try {
+
+
 			// Connect to the server
 			Socket socket = new Socket(server, portNumber);
 
-
 			// Get the output stream so we can read from standard input and sent it to the socket
 			// Get the input stream so we can print data from socket
-			OutputStream output = socket.getOutputStream();
-			InputStream input = socket.getInputStream();
+			OutputStream outputStream = socket.getOutputStream();
+			InputStream inputStream = socket.getInputStream();
 
-			// Write data from standard input to the server
-			// Print all the input we receive from the server
-			int keyboardByte;
-			int outputByte;
-			while ((keyboardByte = System.in.read()) != -1) {
-				output.write(keyboardByte);
-				output.flush();
-				outputByte = input.read();
-				System.out.write(outputByte);
 
-			}
+            Thread outputThread = new Thread(new KeyboardReader(outputStream));
+            outputThread.start();
+
+            Thread inputThread = new Thread(new ServerReader(inputStream));
+            inputThread.start();
+
+            outputThread.join();
+            inputThread.join();
 
 			// Flushes out last bytes
 			System.out.flush();
-
-
 
 			// Close the socket when we're done reading from it
 			socket.close();
 
 			// Provide some minimal error handling.
-		} catch (ConnectException ce) {
-			System.out.println("We were unable to connect to " + server);
-			System.out.println("You should make sure the server is running.");
-		} catch (IOException ioe) {
-			System.out.println("We caught an unexpected exception");
-			System.err.println(ioe);
+		} catch (InterruptedException iex) {
+            System.out.println("Exception in thread: "+iex.getMessage());
 		}
 	}
 }

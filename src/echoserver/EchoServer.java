@@ -1,7 +1,5 @@
 package echoserver;
 
-
-
 import java.net.*;
 import java.io.*;
 import java.io.IOException;
