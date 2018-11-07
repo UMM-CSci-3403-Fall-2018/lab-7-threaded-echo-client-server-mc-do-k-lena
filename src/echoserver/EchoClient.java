@@ -7,7 +7,6 @@ import java.net.Socket;
 
 public class EchoClient {
     public static final int PORT_NUMBER = 6013;
-
     public static void main(String[] args) throws IOException {
         EchoClient client = new EchoClient();
         client.start();
