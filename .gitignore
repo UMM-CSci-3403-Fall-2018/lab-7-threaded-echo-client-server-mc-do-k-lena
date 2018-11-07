@@ -1,4 +1,3 @@
-*.class
 !test/sampleBin/echoserver/*.class
 
 # Ignore the tmp directory that Aruba creates and puts all of its test
